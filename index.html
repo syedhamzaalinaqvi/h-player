@@ -303,7 +303,7 @@
 
         /* ==================== SIDEBAR ==================== */
         .sidebar {
-            position: fixed;
+            position: fixed !important;
             right: -350px;
             top: 0;
             width: 350px;
@@ -313,28 +313,28 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            z-index: 9999;
+            z-index: 99999 !important;
             transition: right 0.3s ease;
             box-shadow: -5px 0 20px rgba(0, 0, 0, 0.5);
         }
 
         .sidebar.show {
-            right: 0;
+            right: 0 !important;
         }
 
         @media (min-width: 1025px) {
             .sidebar {
-                position: fixed;
+                position: fixed !important;
                 right: -350px;
                 top: 0;
                 width: 350px;
                 height: 100vh;
                 transition: right 0.3s ease;
-                z-index: 9999;
+                z-index: 99999 !important;
             }
 
             .sidebar.show {
-                right: 0;
+                right: 0 !important;
             }
         }
 
@@ -808,22 +808,12 @@
         .player-section.fullscreen {
             grid-column: 1 / -1;
             grid-row: 1 / -1;
-            z-index: 1000;
+            z-index: 9998;
         }
 
         .app-container.fullscreen {
             grid-template-columns: 1fr;
             grid-template-rows: 1fr;
-        }
-
-        .control-btn.toggle-sidebar {
-            display: none;
-        }
-
-        @media (max-width: 1024px) {
-            .control-btn.toggle-sidebar {
-                display: flex;
-            }
         }
     </style>
 </head>
@@ -2096,48 +2086,35 @@
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('show');
-            // Ensure sidebar positioning is correct in fullscreen
-            if (document.fullscreenElement) {
-                sidebar.style.position = 'fixed';
-                sidebar.style.zIndex = '10000';
-            }
         }
 
         function closeSidebar() {
-            document.getElementById('sidebar').classList.remove('show');
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.remove('show');
         }
 
         function toggleFullscreen() {
             const section = document.getElementById('playerSection');
             const container = document.getElementById('appContainer');
             const fullscreenBtn = document.getElementById('fullscreenBtn');
-            const sidebar = document.getElementById('sidebar');
             
-            section.classList.toggle('fullscreen');
-            container.classList.toggle('fullscreen');
+            const isFullscreen = section.classList.contains('fullscreen');
             
-            if (section.classList.contains('fullscreen')) {
+            if (!isFullscreen) {
                 // Entering fullscreen
+                section.classList.add('fullscreen');
+                container.classList.add('fullscreen');
                 fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
                 fullscreenBtn.title = 'Exit Fullscreen';
-                // Ensure sidebar has proper z-index and positioning for fullscreen
-                sidebar.style.zIndex = '10000';
-                sidebar.style.position = 'fixed';
-                // Keep sidebar at correct position based on show state
-                if (sidebar.classList.contains('show')) {
-                    sidebar.style.right = '0';
-                } else {
-                    sidebar.style.right = '-350px';
-                }
                 section.requestFullscreen().catch(() => {
                     console.log('Fullscreen request failed');
                 });
             } else {
                 // Exiting fullscreen
+                section.classList.remove('fullscreen');
+                container.classList.remove('fullscreen');
                 fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
                 fullscreenBtn.title = 'Fullscreen';
-                sidebar.style.zIndex = '9999';
-                sidebar.style.position = 'fixed';
                 if (document.fullscreenElement) {
                     document.exitFullscreen();
                 }
