@@ -898,6 +898,9 @@
                 <button class="tab-btn" onclick="switchTab(event, 'settings')">
                     <i class="fas fa-sliders-h"></i> Settings
                 </button>
+                <button class="tab-btn" onclick="switchTab(event, 'embed-panel')">
+                    <i class="fas fa-code"></i> Embed
+                </button>
             </div>
 
             <!-- ADD EPISODE TAB -->
@@ -1038,6 +1041,50 @@
                     <i class="fas fa-trash"></i> Clear All Data
                 </button>
             </div>
+
+            <!-- EMBED TAB -->
+            <div class="tab-panel" id="embed-panel">
+                <div class="form-group">
+                    <label>Select Series to Embed</label>
+                    <select id="embedSeriesSelect">
+                        <option value="">-- Select series --</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Width</label>
+                        <input type="number" id="embedWidth" value="800">
+                    </div>
+                    <div class="form-group">
+                        <label>Height</label>
+                        <input type="number" id="embedHeight" value="450">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Embed Preview / Iframe</label>
+                    <textarea id="embedCodeOutput" readonly style="min-height:120px; white-space:nowrap;"></textarea>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn" onclick="generateEmbedFromUI()">
+                        <i class="fas fa-sync-alt"></i> Generate Embed
+                    </button>
+                    <button class="btn btn-secondary" onclick="copyEmbedCode()">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+
+                <div style="margin-top:12px; display:flex; gap:10px;">
+                    <button class="btn" onclick="downloadPlaylistForSeries()">
+                        <i class="fas fa-download"></i> Download Series JSON
+                    </button>
+                    <button class="btn btn-secondary" onclick="showExportInstructions()">
+                        <i class="fas fa-folder-open"></i> Export To Repo Folder
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1124,7 +1171,8 @@
 
         function generateEmbedIframe(opts = {}) {
             // opts: { series, season, episode, width, height, payloadBase64 }
-            const base = opts.base || 'https://h-player.vercel.app/player.html';
+            // default to the hosted URL the user provided
+            const base = opts.base || 'https://h-player-ashen.vercel.app/';
             const params = new URLSearchParams();
             params.set('embed', '1');
             if (opts.series !== undefined) params.set('series', String(opts.series));
@@ -1134,6 +1182,80 @@
             const w = opts.width || 800;
             const h = opts.height || 450;
             return `<iframe src="${base}?${params.toString()}" width="${w}" height="${h}" frameborder="0" allowfullscreen></iframe>`;
+        }
+
+        // -------- EMBED TAB HELPERS --------
+        function populateEmbedSeriesOptions() {
+            const sel = document.getElementById('embedSeriesSelect');
+            sel.innerHTML = '<option value="">-- Select series --</option>';
+            playlist.forEach((s, idx) => {
+                const opt = document.createElement('option');
+                opt.value = idx;
+                opt.textContent = s.seriesName + ` (${s.seasons.length} seasons)`;
+                sel.appendChild(opt);
+            });
+        }
+
+        function generateEmbedFromUI() {
+            const sel = document.getElementById('embedSeriesSelect');
+            const idx = sel.value;
+            if (idx === '') {
+                showNotification('Select a series to generate embed code', 'error');
+                return;
+            }
+
+            const width = parseInt(document.getElementById('embedWidth').value) || 800;
+            const height = parseInt(document.getElementById('embedHeight').value) || 450;
+
+            // prepare payload for embedding the whole series (all seasons & episodes)
+            const payload = { playlist: [ playlist[idx] ], save: false };
+            const b64 = btoa(JSON.stringify(payload));
+
+            const iframe = generateEmbedIframe({ payloadBase64: b64, width, height, base: 'https://h-player-ashen.vercel.app/' });
+            const out = document.getElementById('embedCodeOutput');
+            out.value = iframe + '\n\n<!-- If you prefer to postMessage the playlist, use the player iframe and then send { type: \"hplayer.load\", payload: {...} } -->';
+
+            showNotification('Embed code generated', 'success');
+        }
+
+        function copyEmbedCode() {
+            const out = document.getElementById('embedCodeOutput');
+            if (!out.value) {
+                showNotification('No embed code to copy', 'error');
+                return;
+            }
+            out.select();
+            document.execCommand('copy');
+            showNotification('Copied to clipboard', 'success');
+        }
+
+        function downloadPlaylistForSeries() {
+            const sel = document.getElementById('embedSeriesSelect');
+            const idx = sel.value;
+            if (idx === '') {
+                showNotification('Select a series to download', 'error');
+                return;
+            }
+
+            const data = playlist[idx];
+            const filename = (`${data.seriesName}`).replace(/[^a-z0-9-_\.]/gi, '_') + '.json';
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+
+            showNotification('Series JSON downloaded', 'success');
+        }
+
+        function showExportInstructions() {
+            const folder = 'copilot-embed';
+            const msg = `To export into the project folder, download the Series JSON then move it into the project folder named \"${folder}\". I created a small helper script in that folder to import JSON files into the repo.`;
+            alert(msg);
         }
 
         // ==================== INITIALIZATION ====================
@@ -1176,6 +1298,7 @@
 
             renderPlaylist();
             renderSeriesManager();
+            populateEmbedSeriesOptions();
 
             // Embed mode handling
             const embed = getQueryParam('embed');
@@ -1280,6 +1403,7 @@
             savePlaylist();
             renderPlaylist();
             renderSeriesManager();
+            populateEmbedSeriesOptions();
             clearAddForm();
             showNotification(`Added: ${episodeName}`, 'success');
         }
@@ -1594,6 +1718,7 @@
             savePlaylist();
             renderPlaylist();
             renderSeriesManager();
+            populateEmbedSeriesOptions();
             showNotification('Episode deleted', 'success');
         }
 
@@ -1604,6 +1729,7 @@
             savePlaylist();
             renderPlaylist();
             renderSeriesManager();
+            populateEmbedSeriesOptions();
             showNotification('Series deleted', 'success');
         }
 
@@ -1940,6 +2066,7 @@
                 savePlaylist();
                 renderPlaylist();
                 renderSeriesManager();
+                populateEmbedSeriesOptions();
                 showNotification('All data cleared', 'success');
             }
         }
