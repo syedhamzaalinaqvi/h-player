@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Streaming Platform - API Testing</title>
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .controls {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        input, select {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-fetch {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-fetch:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-fetch:active {
+            transform: translateY(0);
+        }
+
+        .btn-clear {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-clear:hover {
+            background: #e0e0e0;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: white;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .movies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .movie-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .movie-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .movie-poster {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .movie-poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .movie-info {
+            padding: 20px;
+        }
+
+        .movie-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+            word-break: break-word;
+        }
+
+        .movie-year {
+            color: #999;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .movie-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 12px;
+        }
+
+        .stars {
+            color: #ffc107;
+        }
+
+        .rating-value {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .movie-genre {
+            font-size: 0.85rem;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .movie-summary {
+            font-size: 0.85rem;
+            color: #666;
+            line-height: 1.4;
+            max-height: 80px;
+            overflow: hidden;
+        }
+
+        .movie-link {
+            display: inline-block;
+            margin-top: 12px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .movie-link:hover {
+            text-decoration: underline;
+        }
+
+        .streaming-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 10px;
+            margin-right: 8px;
+        }
+
+        .streaming-available {
+            background: #4caf50;
+            color: white;
+        }
+
+        .streaming-unavailable {
+            background: #f44336;
+            color: white;
+        }
+
+        .streaming-info {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .torrent-link {
+            display: inline-block;
+            padding: 8px 15px;
+            background: #ff6b6b;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+
+        .torrent-link:hover {
+            background: #ff5252;
+        }
+
+        .language-section {
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        .language-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #2196F3;
+            color: white;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin: 4px 4px 4px 0;
+        }
+
+        .language-badge.original {
+            background: #4caf50;
+        }
+
+        .language-badge.dubbed {
+            background: #ff9800;
+        }
+
+        .language-section strong {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .no-results {
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            margin-top: 30px;
+        }
+
+        .stats {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+
+        .stat-item h3 {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .stat-item p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .debug-panel {
+            background: rgba(0, 0, 0, 0.9);
+            color: #0f0;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .debug-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+
+        .debug-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Video Player Modal */
+        .video-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .video-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-container {
+            width: 90%;
+            max-width: 1200px;
+            height: 90vh;
+            background: black;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .video-container video {
+            width: 100%;
+            height: 100%;
+        }
+
+        .video-close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            z-index: 1001;
+            font-weight: 600;
+        }
+
+        .video-close-btn:hover {
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .play-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-right: 8px;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .play-btn:hover {
+            background: #5568d3;
+            transform: scale(1.05);
+        }
+
+        .quality-selector {
+            display: inline-block;
+            margin-right: 8px;
+            margin-top: 8px;
+        }
+
+        .quality-selector select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 2px solid #667eea;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 Movie Streaming Platform</h1>
+            <p class="subtitle">API Testing & Movie Discovery</p>
+        </header>
+
+        <div class="controls">
+            <h2 style="margin-bottom: 20px; color: #333;">Search Filters</h2>
+            
+            <div class="control-group">
+                <div class="input-field">
+                    <label for="query">Search Movie/Series</label>
+                    <input type="text" id="query" placeholder="e.g., Inception, Avatar" value="0">
+                </div>
+                <div class="input-field">
+                    <label for="genre">Genre</label>
+                    <select id="genre">
+                        <option value="all">All Genres</option>
+                        <option value="action">Action</option>
+                        <option value="adventure">Adventure</option>
+                        <option value="animation">Animation</option>
+                        <option value="comedy">Comedy</option>
+                        <option value="crime">Crime</option>
+                        <option value="drama">Drama</option>
+                        <option value="fantasy">Fantasy</option>
+                        <option value="horror">Horror</option>
+                        <option value="romance">Romance</option>
+                        <option value="sci-fi">Sci-Fi</option>
+                        <option value="thriller">Thriller</option>
+                    </select>
+                </div>
+                <div class="input-field">
+                    <label for="quality">Quality</label>
+                    <select id="quality">
+                        <option value="all">All</option>
+                        <option value="720p">720p</option>
+                        <option value="1080p">1080p</option>
+                        <option value="2160p">2160p (4K)</option>
+                    </select>
+                </div>
+                <div class="input-field">
+                    <label for="minRating">Minimum Rating</label>
+                    <input type="number" id="minRating" min="0" max="10" step="0.1" value="0">
+                </div>
+                <div class="input-field">
+                    <label for="limit">Results Per Page</label>
+                    <input type="number" id="limit" min="1" max="50" value="20">
+                </div>
+                <div class="input-field">
+                    <label for="page">Page Number</label>
+                    <input type="number" id="page" min="1" value="1">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="input-field">
+                    <label for="sortBy">Sort By</label>
+                    <select id="sortBy">
+                        <option value="date_added">Date Added</option>
+                        <option value="title">Title</option>
+                        <option value="year">Release Year</option>
+                        <option value="rating">Rating</option>
+                    </select>
+                </div>
+                <div class="input-field">
+                    <label for="orderBy">Order</label>
+                    <select id="orderBy">
+                        <option value="desc">Descending</option>
+                        <option value="asc">Ascending</option>
+                    </select>
+                </div>
+                <div class="input-field">
+                    <label for="languageFilter">Filter by Language</label>
+                    <select id="languageFilter">
+                        <option value="">All Languages</option>
+                        <option value="english">English</option>
+                        <option value="hindi">Hindi (Dubbed)</option>
+                        <option value="tamil">Tamil (Dubbed)</option>
+                        <option value="telugu">Telugu (Dubbed)</option>
+                        <option value="kannada">Kannada (Dubbed)</option>
+                        <option value="malayalam">Malayalam (Dubbed)</option>
+                        <option value="bengali">Bengali (Dubbed)</option>
+                        <option value="spanish">Spanish (Dubbed)</option>
+                        <option value="french">French (Dubbed)</option>
+                        <option value="portuguese">Portuguese (Dubbed)</option>
+                    </select>
+                </div>
+                <div class="input-field">
+                    <label for="streamingFilter">
+                        <input type="checkbox" id="streamingFilter"> Show only with Streaming
+                    </label>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-fetch" onclick="fetchMovies()">🔍 Search Movies</button>
+                <button class="btn-clear" onclick="clearResults()">🗑️ Clear</button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Loading movies...</p>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-item">
+                <h3 id="totalMovies">0</h3>
+                <p>Total Movies</p>
+            </div>
+            <div class="stat-item">
+                <h3 id="avgRating">0</h3>
+                <p>Average Rating</p>
+            </div>
+        </div>
+
+        <div class="movies-grid" id="moviesContainer">
+            <div class="no-results">No movies loaded yet. Use the search filters above to get started!</div>
+        </div>
+
+        <button class="debug-toggle" onclick="toggleDebugPanel()">🔧 Toggle Debug Console</button>
+        <div class="debug-panel" id="debugPanel" style="display: none;">
+            <span id="debugOutput">Debug information will appear here...</span>
+        </div>
+    </div>
+
+    <!-- Video Player Modal -->
+    <div class="video-modal" id="videoModal">
+        <div class="video-container">
+            <button class="video-close-btn" onclick="closeVideoPlayer()">✕ Close</button>
+            <video id="moviePlayer" controls>
+                <source src="" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+    </div>
+
+    <script>
+        const API_HOST = 'movie-database-api1.p.rapidapi.com';
+        const API_KEY = '32a8817212msh7f3f4d71c33d39dp1e60cfjsnd741986feab8';
+        const API_URL = 'https://movie-database-api1.p.rapidapi.com/list_movies.json';
+
+        let debugLogs = [];
+
+        function debugLog(message, data = null) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}${data ? '\n' + JSON.stringify(data, null, 2) : ''}`;
+            debugLogs.push(logEntry);
+            console.log(logEntry);
+            
+            // Keep only last 50 logs
+            if (debugLogs.length > 50) debugLogs.shift();
+            
+            updateDebugPanel();
+        }
+
+        function updateDebugPanel() {
+            document.getElementById('debugOutput').textContent = debugLogs.join('\n\n');
+            const panel = document.getElementById('debugPanel');
+            if (panel.style.display !== 'none') {
+                panel.scrollTop = panel.scrollHeight;
+            }
+        }
+
+        function toggleDebugPanel() {
+            const panel = document.getElementById('debugPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            if (panel.style.display !== 'none') {
+                panel.scrollTop = panel.scrollHeight;
+            }
+        }
+
+        async function fetchMovies() {
+            const query = document.getElementById('query').value;
+            const genre = document.getElementById('genre').value;
+            const quality = document.getElementById('quality').value;
+            const minRating = document.getElementById('minRating').value;
+            const limit = document.getElementById('limit').value;
+            const page = document.getElementById('page').value;
+            const sortBy = document.getElementById('sortBy').value;
+            const orderBy = document.getElementById('orderBy').value;
+
+            const params = new URLSearchParams({
+                limit: limit,
+                page: page,
+                quality: quality,
+                genre: genre,
+                minimum_rating: minRating,
+                query_term: query,
+                sort_by: sortBy,
+                order_by: orderBy,
+                with_rt_ratings: 'false'
+            });
+
+            const url = `${API_URL}?${params.toString()}`;
+
+            debugLog('Starting API Request', {
+                url: url,
+                query: query,
+                genre: genre,
+                quality: quality,
+                minRating: minRating
+            });
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+
+            try {
+                debugLog('Sending fetch request...');
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'x-rapidapi-host': API_HOST,
+                        'x-rapidapi-key': API_KEY
+                    }
+                });
+
+                debugLog('Response received', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    contentType: response.headers.get('content-type')
+                });
+
+                const data = await response.json();
+                
+                debugLog('JSON parsed successfully', {
+                    dataKeys: Object.keys(data),
+                    status: data.status,
+                    statusMessage: data.status_message
+                });
+
+                document.getElementById('loading').style.display = 'none';
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status} - ${data.status_message || 'Unknown error'}`);
+                }
+
+                // Check different possible response structures
+                const movies = data.data?.movies || data.movies || [];
+                
+                debugLog('Movies extracted', {
+                    count: movies.length,
+                    sampleMovie: movies[0] || 'No movies'
+                });
+                
+                if (movies.length > 0) {
+                    displayMovies(movies);
+                    displayStats(movies);
+                    showError(''); // Clear any previous errors
+                    debugLog('✅ Successfully displayed ' + movies.length + ' movies');
+                } else {
+                    let message = 'No movies found. ';
+                    if (data.status_message) {
+                        message += `API says: ${data.status_message}`;
+                    } else {
+                        message += 'Try different search parameters!';
+                    }
+                    document.getElementById('moviesContainer').innerHTML = 
+                        `<div class="no-results">${message}</div>`;
+                    document.getElementById('stats').style.display = 'none';
+                    showError(`Status: ${data.status || 'ok'} - ${movies.length} movies returned`);
+                    debugLog('❌ No movies in response', data);
+                }
+
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                showError(`Error fetching movies: ${error.message}`);
+                debugLog('❌ Error occurred', {
+                    message: error.message,
+                    stack: error.stack
+                });
+            }
+        }
+
+        function displayMovies(movies) {
+            const container = document.getElementById('moviesContainer');
+            container.innerHTML = '';
+
+            const streamingFilter = document.getElementById('streamingFilter').checked;
+            const languageFilter = document.getElementById('languageFilter').value;
+            let filteredMovies = movies;
+
+            // Filter by streaming availability if checkbox is checked
+            if (streamingFilter) {
+                filteredMovies = filteredMovies.filter(movie => movie.torrents && movie.torrents.length > 0);
+            }
+
+            // Filter by language if selected
+            if (languageFilter) {
+                filteredMovies = filteredMovies.filter(movie => {
+                    const languages = extractLanguages(movie);
+                    const languageNames = languages.map(l => l.name.toLowerCase());
+                    return languageNames.some(lang => lang.includes(languageFilter.toLowerCase()));
+                });
+            }
+                
+            if (filteredMovies.length === 0) {
+                const reason = streamingFilter && languageFilter ? 
+                    'No movies found with selected streaming and language options!' :
+                    streamingFilter ? 
+                    'No movies with streaming available. Try different filters!' :
+                    'No movies found with selected language. Try different filters!';
+                container.innerHTML = `<div class="no-results">${reason}</div>`;
+                return;
+            }
+
+            filteredMovies.forEach(movie => {
+                const card = document.createElement('div');
+                card.className = 'movie-card';
+                
+                const posterImg = movie.medium_cover_image ? 
+                    `<img src="${movie.medium_cover_image}" alt="${movie.title}">` :
+                    `<div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
+                        <span>${movie.title}</span>
+                    </div>`;
+
+                const rating = movie.rating || 'N/A';
+                const stars = generateStars(rating);
+                const summary = movie.summary ? movie.summary.substring(0, 100) + '...' : 'No summary available';
+
+                // Check if streaming is available
+                const hasYifyServer = movie.torrents && movie.torrents.length > 0;
+                const streamingStatus = hasYifyServer ? 'available' : 'unavailable';
+                const streamingBadge = hasYifyServer ? 
+                    `<span class="streaming-badge streaming-available">✓ Streaming Available</span>` :
+                    `<span class="streaming-badge streaming-unavailable">✗ Not Available</span>`;
+
+                // Get streaming/torrent info
+                let streamingLinks = '';
+                if (movie.torrents && movie.torrents.length > 0) {
+                    streamingLinks = '<div class="streaming-info"><strong>Available Torrents:</strong>';
+                    movie.torrents.forEach((torrent, index) => {
+                        const movieTitle = movie.title;
+                        streamingLinks += `<br/><a href="${torrent.url}" target="_blank" class="torrent-link">📥 ${torrent.quality} (${torrent.type})</a>`;
+                        streamingLinks += `<button class="play-btn" onclick="playMovie('${movieTitle}', '${torrent.url}', '${torrent.quality}')">▶ Play ${torrent.quality}</button>`;
+                    });
+                    streamingLinks += '</div>';
+                } else {
+                    streamingLinks = '<div class="streaming-info" style="color: #f44336;"><strong>⚠️ No streaming sources available</strong></div>';
+                }
+
+                // Get language info
+                let languageInfo = '';
+                const languages = extractLanguages(movie);
+                if (languages.length > 0) {
+                    languageInfo = '<div class="language-section"><strong>🌐 Available Languages:</strong>';
+                    languages.forEach(lang => {
+                        const isDubbed = lang.isDubbed;
+                        const badgeClass = isDubbed ? 'dubbed' : 'original';
+                        const label = isDubbed ? `${lang.name} (Dubbed)` : `${lang.name} (Original)`;
+                        languageInfo += `<span class="language-badge ${badgeClass}">${label}</span>`;
+                    });
+                    languageInfo += '</div>';
+                } else {
+                    languageInfo = '<div class="language-section"><strong>🌐 Languages:</strong><span class="language-badge">English (Default)</span></div>';
+                }
+
+                card.innerHTML = `
+                    <div class="movie-poster">
+                        ${posterImg}
+                    </div>
+                    <div class="movie-info">
+                        <div class="movie-title">${movie.title}</div>
+                        <div class="movie-year">${movie.year || 'Unknown Year'}</div>
+                        <div class="movie-rating">
+                            <span class="stars">${stars}</span>
+                            <span class="rating-value">${rating}/10</span>
+                        </div>
+                        <div class="movie-genre">${movie.genres ? movie.genres.join(', ') : 'N/A'}</div>
+                        ${streamingBadge}
+                        <div class="movie-summary">${summary}</div>
+                        ${languageInfo}
+                        ${streamingLinks}
+                        ${movie.url ? `<a href="${movie.url}" target="_blank" class="movie-link">📖 View Full Details →</a>` : ''}
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+
+            // Update stats with filtered results
+            if (filteredMovies.length > 0) {
+                displayStats(filteredMovies);
+            }
+        }
+
+        function extractLanguages(movie) {
+            const languages = [];
+            const languageMap = {
+                'en': { name: 'English', isDubbed: false },
+                'hi': { name: 'Hindi', isDubbed: true },
+                'ta': { name: 'Tamil', isDubbed: true },
+                'te': { name: 'Telugu', isDubbed: true },
+                'ka': { name: 'Kannada', isDubbed: true },
+                'ml': { name: 'Malayalam', isDubbed: true },
+                'bn': { name: 'Bengali', isDubbed: true },
+                'pa': { name: 'Punjabi', isDubbed: true },
+                'gu': { name: 'Gujarati', isDubbed: true },
+                'mr': { name: 'Marathi', isDubbed: true },
+                'or': { name: 'Odia', isDubbed: true },
+                'ur': { name: 'Urdu', isDubbed: true },
+                'es': { name: 'Spanish', isDubbed: true },
+                'fr': { name: 'French', isDubbed: true },
+                'de': { name: 'German', isDubbed: true },
+                'it': { name: 'Italian', isDubbed: true },
+                'pt': { name: 'Portuguese', isDubbed: true },
+                'ru': { name: 'Russian', isDubbed: true },
+                'ar': { name: 'Arabic', isDubbed: true },
+                'ja': { name: 'Japanese', isDubbed: true },
+                'ko': { name: 'Korean', isDubbed: true },
+                'zh': { name: 'Chinese', isDubbed: true },
+                'th': { name: 'Thai', isDubbed: true },
+                'tr': { name: 'Turkish', isDubbed: true },
+            };
+
+            // Extract from movie object
+            if (movie.language) {
+                if (Array.isArray(movie.language)) {
+                    movie.language.forEach(lang => {
+                        if (languageMap[lang]) {
+                            languages.push(languageMap[lang]);
+                        } else {
+                            languages.push({ name: lang.toUpperCase(), isDubbed: true });
+                        }
+                    });
+                } else {
+                    if (languageMap[movie.language]) {
+                        languages.push(languageMap[movie.language]);
+                    } else {
+                        languages.push({ name: movie.language.toUpperCase(), isDubbed: true });
+                    }
+                }
+            }
+
+            // Check torrent descriptions for language hints
+            if (movie.torrents) {
+                movie.torrents.forEach(torrent => {
+                    const desc = (torrent.type || '').toLowerCase();
+                    
+                    // Check for common dubbed language patterns
+                    if (desc.includes('hindi') && !languages.some(l => l.name === 'Hindi')) {
+                        languages.push({ name: 'Hindi', isDubbed: true });
+                    }
+                    if (desc.includes('tamil') && !languages.some(l => l.name === 'Tamil')) {
+                        languages.push({ name: 'Tamil', isDubbed: true });
+                    }
+                    if (desc.includes('telugu') && !languages.some(l => l.name === 'Telugu')) {
+                        languages.push({ name: 'Telugu', isDubbed: true });
+                    }
+                    if (desc.includes('kannada') && !languages.some(l => l.name === 'Kannada')) {
+                        languages.push({ name: 'Kannada', isDubbed: true });
+                    }
+                    if (desc.includes('malayalam') && !languages.some(l => l.name === 'Malayalam')) {
+                        languages.push({ name: 'Malayalam', isDubbed: true });
+                    }
+                    if (desc.includes('spanish') && !languages.some(l => l.name === 'Spanish')) {
+                        languages.push({ name: 'Spanish', isDubbed: true });
+                    }
+                    if (desc.includes('french') && !languages.some(l => l.name === 'French')) {
+                        languages.push({ name: 'French', isDubbed: true });
+                    }
+                });
+            }
+
+            // Remove duplicates
+            const uniqueLanguages = [];
+            const seen = new Set();
+            languages.forEach(lang => {
+                const key = lang.name + lang.isDubbed;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueLanguages.push(lang);
+                }
+            });
+
+            return uniqueLanguages;
+        }
+
+        function generateStars(rating) {
+            const fullStars = Math.floor(rating / 2);
+            const hasHalfStar = (rating % 2) >= 1;
+            let stars = '★'.repeat(fullStars);
+            if (hasHalfStar) stars += '✦';
+            stars += '☆'.repeat(5 - Math.ceil(fullStars + (hasHalfStar ? 0.5 : 0)));
+            return stars;
+        }
+
+        function displayStats(movies) {
+            const totalMovies = movies.length;
+            const avgRating = (movies.reduce((sum, movie) => sum + (movie.rating || 0), 0) / totalMovies).toFixed(1);
+
+            document.getElementById('totalMovies').textContent = totalMovies;
+            document.getElementById('avgRating').textContent = avgRating;
+            document.getElementById('stats').style.display = 'flex';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function clearResults() {
+            document.getElementById('moviesContainer').innerHTML = 
+                '<div class="no-results">No movies loaded yet. Use the search filters above to get started!</div>';
+            document.getElementById('stats').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+        }
+
+        // Video Player Functions
+        let currentMovie = null;
+        let player = null;
+
+        function playMovie(movieTitle, torrentUrl, quality = '720p') {
+            debugLog('Starting video playback', { movieTitle, quality, torrentUrl });
+            
+            currentMovie = {
+                title: movieTitle,
+                url: torrentUrl,
+                quality: quality
+            };
+
+            const videoPlayer = document.getElementById('moviePlayer');
+            videoPlayer.src = torrentUrl;
+            
+            const modal = document.getElementById('videoModal');
+            modal.classList.add('active');
+
+            // Initialize Plyr if not already done
+            if (!player) {
+                player = new Plyr(videoPlayer, {
+                    controls: [
+                        'play-large',
+                        'play',
+                        'progress',
+                        'current-time',
+                        'duration',
+                        'mute',
+                        'volume',
+                        'captions',
+                        'settings',
+                        'fullscreen'
+                    ],
+                    settings: ['captions', 'quality', 'speed', 'loop'],
+                    autoplay: true,
+                    keyboard: { focused: true, global: true }
+                });
+            } else {
+                // Reload with new source
+                player.source = {
+                    type: 'video',
+                    sources: [{
+                        src: torrentUrl,
+                        type: 'video/mp4'
+                    }]
+                };
+                player.play();
+            }
+
+            debugLog('✅ Video player opened', { movieTitle, quality });
+        }
+
+        function closeVideoPlayer() {
+            const modal = document.getElementById('videoModal');
+            modal.classList.remove('active');
+            
+            if (player) {
+                player.stop();
+            }
+            
+            debugLog('Video player closed');
+        }
+
+        // Close modal on ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeVideoPlayer();
+            }
+        });
+
+        // Close modal when clicking outside video
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('videoModal');
+            if (e.target === modal) {
+                closeVideoPlayer();
+            }
+        });
+
+        // Initial load
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('Movie Streaming Platform loaded!');
+        });
+    </script>
+    <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
+
+
+
+</body>
+</html>

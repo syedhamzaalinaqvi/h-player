@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streaming Link Validator - Advanced Testing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .panel h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: 600;
+            color: #333;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        textarea, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'Courier New', monospace;
+            transition: border-color 0.3s;
+            resize: vertical;
+        }
+
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        textarea {
+            min-height: 120px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .results-container {
+            margin-top: 30px;
+        }
+
+        .result-item {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 5px solid #667eea;
+        }
+
+        .result-item.success {
+            border-left-color: #4caf50;
+            background: #f1f8f4;
+        }
+
+        .result-item.warning {
+            border-left-color: #ff9800;
+            background: #fff8f1;
+        }
+
+        .result-item.error {
+            border-left-color: #f44336;
+            background: #fef1f0;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .result-content {
+            color: #666;
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #4caf50;
+            color: white;
+        }
+
+        .status-expired {
+            background: #f44336;
+            color: white;
+        }
+
+        .status-expiring {
+            background: #ff9800;
+            color: white;
+        }
+
+        .status-unknown {
+            background: #9e9e9e;
+            color: white;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 4px solid rgba(102, 126, 234, 0.3);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .test-suite {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .test-case {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .test-case.passed {
+            border-left-color: #4caf50;
+        }
+
+        .test-case.failed {
+            border-left-color: #f44336;
+        }
+
+        .test-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .test-result {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+
+        .token-analyzer {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .token-part {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            word-break: break-all;
+            border-left: 4px solid #667eea;
+        }
+
+        .token-part.header {
+            border-left-color: #4caf50;
+        }
+
+        .token-part.payload {
+            border-left-color: #2196F3;
+        }
+
+        .token-part.signature {
+            border-left-color: #ff9800;
+        }
+
+        .expiry-timeline {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+        }
+
+        .timeline-marker {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .timeline-marker.active {
+            background: #4caf50;
+        }
+
+        .timeline-marker.expired {
+            background: #f44336;
+        }
+
+        .timeline-marker.future {
+            background: #2196F3;
+        }
+
+        .timeline-content h4 {
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .timeline-content p {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .health-meter {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .meter-bar {
+            flex: 1;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .meter-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .meter-label {
+            font-size: 0.8rem;
+            color: #666;
+            text-align: center;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            color: #1565c0;
+            font-size: 0.9rem;
+        }
+
+        .debug-section {
+            background: rgba(0, 0, 0, 0.9);
+            color: #0f0;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 Streaming Link Validator</h1>
+            <p class="subtitle">Advanced Authentication & Expiry Testing Suite</p>
+        </header>
+
+        <div class="main-grid">
+            <!-- Left Panel: URL Validator -->
+            <div class="panel">
+                <h2>🔗 URL Validator</h2>
+                
+                <div class="info-box">
+                    ℹ️ Paste your streaming URL to analyze authentication tokens, expiry time, and link health.
+                </div>
+
+                <div class="input-group">
+                    <label for="streamingUrl">Streaming URL</label>
+                    <textarea id="streamingUrl" placeholder="https://example.com/stream?token=xyz&exp=1234567890"></textarea>
+                </div>
+
+                <button onclick="validateStreamingLink()">🔍 Analyze URL</button>
+                <button class="btn-secondary" onclick="clearUrlValidator()">Clear</button>
+
+                <div id="urlValidatorLoading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing URL...</p>
+                </div>
+
+                <div id="urlValidatorResults" class="results-container"></div>
+            </div>
+
+            <!-- Right Panel: Token Analyzer -->
+            <div class="panel">
+                <h2>🔐 JWT/Token Analyzer</h2>
+                
+                <div class="info-box">
+                    ℹ️ Extract and decode JWT tokens from URLs or paste directly to check payload and expiry claims.
+                </div>
+
+                <div class="input-group">
+                    <label for="tokenInput">Token/JWT</label>
+                    <textarea id="tokenInput" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."></textarea>
+                </div>
+
+                <button onclick="analyzeToken()">🔐 Decode Token</button>
+                <button class="btn-secondary" onclick="clearTokenAnalyzer()">Clear</button>
+
+                <div id="tokenLoading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Decoding token...</p>
+                </div>
+
+                <div id="tokenAnalyzerResults" class="results-container"></div>
+            </div>
+        </div>
+
+        <!-- Batch Testing Panel -->
+        <div class="panel">
+            <h2>📋 Batch Link Testing</h2>
+            
+            <div class="info-box">
+                ℹ️ Test multiple URLs at once. Paste one URL per line to validate all links simultaneously.
+            </div>
+
+            <div class="input-group">
+                <label for="batchUrls">URLs (one per line)</label>
+                <textarea id="batchUrls" placeholder="https://url1.com/stream?token=xyz
+https://url2.com/stream?exp=1234567890
+https://url3.com/stream?auth=token"></textarea>
+            </div>
+
+            <button onclick="batchTestLinks()">🧪 Test All URLs</button>
+            <button class="btn-secondary" onclick="clearBatchTest()">Clear</button>
+
+            <div id="batchLoading" class="loading">
+                <div class="spinner"></div>
+                <p>Testing URLs...</p>
+            </div>
+
+            <div id="batchResults" class="results-container"></div>
+        </div>
+
+        <!-- Debug Console -->
+        <div class="panel" style="margin-top: 30px;">
+            <h2>🔧 Debug Console</h2>
+            <button class="btn-secondary" onclick="clearDebugConsole()">Clear Console</button>
+            <div id="debugConsole" class="debug-section">Debug information will appear here...</div>
+        </div>
+    </div>
+
+    <script>
+        let debugLogs = [];
+
+        // ==================== DEBUG LOGGING ====================
+        function log(message, data = null) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}${data ? '\n' + JSON.stringify(data, null, 2) : ''}`;
+            debugLogs.push(logEntry);
+            console.log(logEntry);
+            
+            if (debugLogs.length > 100) debugLogs.shift();
+            updateDebugConsole();
+        }
+
+        function updateDebugConsole() {
+            document.getElementById('debugConsole').textContent = debugLogs.join('\n\n');
+            const console = document.getElementById('debugConsole');
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function clearDebugConsole() {
+            debugLogs = [];
+            updateDebugConsole();
+        }
+
+        // ==================== URL PARSER ====================
+        function parseUrl(urlString) {
+            try {
+                const url = new URL(urlString);
+                return {
+                    href: url.href,
+                    protocol: url.protocol,
+                    hostname: url.hostname,
+                    pathname: url.pathname,
+                    search: url.search,
+                    hash: url.hash,
+                    params: Object.fromEntries(url.searchParams)
+                };
+            } catch (error) {
+                log('❌ URL Parse Error', error.message);
+                throw error;
+            }
+        }
+
+        // ==================== TOKEN DETECTION & ANALYSIS ====================
+        function detectTokenPatterns(params) {
+            const patterns = {
+                jwt: /^eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/,
+                expiry_timestamp: /^\d{10}$|^\d{13}$/,
+                bearer: /^Bearer\s+/i,
+                oauth: /^oauth2?_/i,
+                api_key: /^[a-f0-9]{32,}$/i,
+            };
+
+            let detectedTokens = {};
+
+            // Check all parameters for tokens
+            for (let [key, value] of Object.entries(params)) {
+                const lowerKey = key.toLowerCase();
+                
+                if (patterns.jwt.test(value)) {
+                    detectedTokens[key] = { type: 'JWT', value, risk: 'high' };
+                } else if (patterns.bearer.test(value)) {
+                    detectedTokens[key] = { type: 'Bearer Token', value, risk: 'high' };
+                } else if (patterns.oauth.test(key)) {
+                    detectedTokens[key] = { type: 'OAuth Token', value, risk: 'high' };
+                } else if (lowerKey.includes('token') || lowerKey.includes('auth') || lowerKey.includes('apikey')) {
+                    detectedTokens[key] = { type: 'Auth Token', value, risk: 'medium' };
+                } else if (lowerKey.includes('exp') && patterns.expiry_timestamp.test(value)) {
+                    detectedTokens[key] = { type: 'Expiry Timestamp', value, risk: 'critical' };
+                } else if ((lowerKey.includes('exp') || lowerKey.includes('ttl') || lowerKey.includes('timeout')) && value) {
+                    detectedTokens[key] = { type: 'Expiry Value', value, risk: 'critical' };
+                }
+            }
+
+            return detectedTokens;
+        }
+
+        // ==================== EXPIRY DETECTION ====================
+        function detectExpiry(params) {
+            const expiryInfo = {
+                found: false,
+                value: null,
+                type: null,
+                expiryDate: null,
+                status: null,
+                daysRemaining: null,
+                percentage: null
+            };
+
+            for (let [key, value] of Object.entries(params)) {
+                const lowerKey = key.toLowerCase();
+
+                // Check for Unix timestamp (seconds or milliseconds)
+                if ((lowerKey === 'exp' || lowerKey === 'expires' || lowerKey === 'expiry' || lowerKey === 'expiryTime') && value) {
+                    let timestamp = parseInt(value);
+                    
+                    // If milliseconds, convert to seconds
+                    if (timestamp > 10000000000) {
+                        timestamp = Math.floor(timestamp / 1000);
+                    }
+
+                    const expiryDate = new Date(timestamp * 1000);
+                    const now = new Date();
+                    const diff = expiryDate - now;
+                    const daysRemaining = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+                    expiryInfo.found = true;
+                    expiryInfo.value = value;
+                    expiryInfo.type = 'Unix Timestamp';
+                    expiryInfo.expiryDate = expiryDate.toISOString();
+                    expiryInfo.daysRemaining = daysRemaining;
+
+                    if (diff < 0) {
+                        expiryInfo.status = 'EXPIRED';
+                        expiryInfo.percentage = 0;
+                    } else if (daysRemaining <= 1) {
+                        expiryInfo.status = 'EXPIRING SOON';
+                        expiryInfo.percentage = 25;
+                    } else if (daysRemaining <= 7) {
+                        expiryInfo.status = 'EXPIRING';
+                        expiryInfo.percentage = 50;
+                    } else {
+                        expiryInfo.status = 'ACTIVE';
+                        expiryInfo.percentage = 100;
+                    }
+                    break;
+                }
+
+                // Check for ISO date format
+                if ((lowerKey.includes('exp') || lowerKey.includes('deadline')) && /\d{4}-\d{2}-\d{2}/.test(value)) {
+                    const expiryDate = new Date(value);
+                    const now = new Date();
+                    const diff = expiryDate - now;
+                    const daysRemaining = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+                    expiryInfo.found = true;
+                    expiryInfo.value = value;
+                    expiryInfo.type = 'ISO Date';
+                    expiryInfo.expiryDate = expiryDate.toISOString();
+                    expiryInfo.daysRemaining = daysRemaining;
+
+                    if (diff < 0) {
+                        expiryInfo.status = 'EXPIRED';
+                        expiryInfo.percentage = 0;
+                    } else if (daysRemaining <= 1) {
+                        expiryInfo.status = 'EXPIRING SOON';
+                        expiryInfo.percentage = 25;
+                    } else if (daysRemaining <= 7) {
+                        expiryInfo.status = 'EXPIRING';
+                        expiryInfo.percentage = 50;
+                    } else {
+                        expiryInfo.status = 'ACTIVE';
+                        expiryInfo.percentage = 100;
+                    }
+                    break;
+                }
+            }
+
+            return expiryInfo;
+        }
+
+        // ==================== LINK HEALTH CHECK ====================
+        async function checkLinkHealth(urlString) {
+            const healthInfo = {
+                reachable: null,
+                httpCode: null,
+                contentType: null,
+                contentLength: null,
+                headers: {},
+                isValid: false,
+                error: null
+            };
+
+            try {
+                log('Checking link health...', { url: urlString });
+                
+                const response = await fetch(urlString, {
+                    method: 'HEAD',
+                    mode: 'no-cors',
+                    cache: 'no-cache'
+                });
+
+                healthInfo.reachable = response.ok;
+                healthInfo.httpCode = response.status;
+                healthInfo.isValid = true;
+                log('✅ Link health check completed', healthInfo);
+            } catch (error) {
+                log('⚠️ Link health check error', { error: error.message });
+                healthInfo.reachable = false;
+                healthInfo.error = error.message;
+            }
+
+            return healthInfo;
+        }
+
+        // ==================== JWT DECODER ====================
+        function decodeJWT(token) {
+            try {
+                const parts = token.split('.');
+                if (parts.length !== 3) {
+                    throw new Error('Invalid JWT format');
+                }
+
+                const header = JSON.parse(atob(parts[0]));
+                const payload = JSON.parse(atob(parts[1]));
+                
+                return { header, payload, signature: parts[2] };
+            } catch (error) {
+                log('❌ JWT Decode Error', error.message);
+                throw error;
+            }
+        }
+
+        // ==================== MAIN VALIDATION FUNCTION ====================
+        async function validateStreamingLink() {
+            const urlString = document.getElementById('streamingUrl').value.trim();
+            
+            if (!urlString) {
+                alert('Please enter a URL');
+                return;
+            }
+
+            document.getElementById('urlValidatorLoading').style.display = 'block';
+            const resultsDiv = document.getElementById('urlValidatorResults');
+            resultsDiv.innerHTML = '';
+
+            try {
+                log('Starting URL validation...', { url: urlString });
+
+                // Parse URL
+                const urlData = parseUrl(urlString);
+                log('✅ URL parsed successfully', urlData);
+
+                // Detect tokens
+                const tokens = detectTokenPatterns(urlData.params);
+                log('Tokens detected', tokens);
+
+                // Detect expiry
+                const expiryInfo = detectExpiry(urlData.params);
+                log('Expiry info extracted', expiryInfo);
+
+                // Check link health
+                const healthInfo = await checkLinkHealth(urlString);
+
+                // Display results
+                displayValidationResults(urlData, tokens, expiryInfo, healthInfo, resultsDiv);
+
+            } catch (error) {
+                log('❌ Validation Error', error.message);
+                resultsDiv.innerHTML = `<div class="result-item error">
+                    <div class="result-title">❌ Error</div>
+                    <div class="result-content">${error.message}</div>
+                </div>`;
+            } finally {
+                document.getElementById('urlValidatorLoading').style.display = 'none';
+            }
+        }
+
+        function displayValidationResults(urlData, tokens, expiryInfo, healthInfo, container) {
+            let html = '';
+
+            // URL Structure
+            html += `<div class="result-item success">
+                <div class="result-title">✓ URL Structure</div>
+                <div class="result-content">
+                    <strong>Protocol:</strong> ${urlData.protocol}<br>
+                    <strong>Hostname:</strong> ${urlData.hostname}<br>
+                    <strong>Path:</strong> ${urlData.pathname}
+                </div>
+            </div>`;
+
+            // Tokens Detected
+            if (Object.keys(tokens).length > 0) {
+                html += `<div class="result-item warning">
+                    <div class="result-title">⚠️ ${Object.keys(tokens).length} Token(s) Detected</div>
+                    <div class="result-content">`;
+                for (let [key, tokenInfo] of Object.entries(tokens)) {
+                    html += `<strong>${key}</strong> (${tokenInfo.type}, Risk: ${tokenInfo.risk})<br>`;
+                    html += `Value: <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">${tokenInfo.value.substring(0, 50)}${tokenInfo.value.length > 50 ? '...' : ''}</code><br>`;
+                }
+                html += `</div></div>`;
+            } else {
+                html += `<div class="result-item success">
+                    <div class="result-title">✓ No Suspicious Tokens</div>
+                    <div class="result-content">No detected auth tokens in URL parameters</div>
+                </div>`;
+            }
+
+            // Expiry Information
+            if (expiryInfo.found) {
+                const statusClass = expiryInfo.status === 'ACTIVE' ? 'success' : 
+                                   expiryInfo.status === 'EXPIRED' ? 'error' : 'warning';
+                
+                html += `<div class="result-item ${statusClass}">
+                    <div class="result-title">⏰ Expiry Detection
+                        <span class="status-badge ${expiryInfo.status === 'ACTIVE' ? 'status-active' : expiryInfo.status === 'EXPIRED' ? 'status-expired' : 'status-expiring'}">
+                            ${expiryInfo.status}
+                        </span>
+                    </div>
+                    <div class="result-content">
+                        <strong>Type:</strong> ${expiryInfo.type}<br>
+                        <strong>Expiry Date:</strong> ${new Date(expiryInfo.expiryDate).toLocaleString()}<br>
+                        <strong>Days Remaining:</strong> ${expiryInfo.daysRemaining}<br>
+                        <div class="progress-bar" style="margin-top: 10px;">
+                            <div class="progress-fill" style="width: ${expiryInfo.percentage}%"></div>
+                        </div>
+                    </div>
+                </div>`;
+            } else {
+                html += `<div class="result-item success">
+                    <div class="result-title">✓ No Expiry Information</div>
+                    <div class="result-content">No time-based expiry parameters found in URL</div>
+                </div>`;
+            }
+
+            // Link Health
+            const healthClass = healthInfo.isValid && healthInfo.reachable ? 'success' : 'error';
+            html += `<div class="result-item ${healthClass}">
+                <div class="result-title">🏥 Link Health</div>
+                <div class="result-content">
+                    <strong>Status:</strong> ${healthInfo.isValid ? (healthInfo.reachable ? '✓ Reachable' : '✗ Not Reachable') : '⚠️ Unknown'}<br>
+                    ${healthInfo.httpCode ? `<strong>HTTP Code:</strong> ${healthInfo.httpCode}<br>` : ''}
+                    ${healthInfo.error ? `<strong>Error:</strong> ${healthInfo.error}<br>` : ''}
+                </div>
+            </div>`;
+
+            // Query Parameters
+            html += `<div class="result-item success">
+                <div class="result-title">📊 Query Parameters (${Object.keys(urlData.params).length})</div>
+                <div class="result-content">`;
+            for (let [key, value] of Object.entries(urlData.params)) {
+                html += `<strong>${key}:</strong> <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">${value.substring(0, 40)}${value.length > 40 ? '...' : ''}</code><br>`;
+            }
+            html += `</div></div>`;
+
+            // Security Risk Assessment
+            let riskLevel = 'LOW';
+            if (expiryInfo.found && expiryInfo.status === 'EXPIRED') {
+                riskLevel = 'CRITICAL';
+            } else if (Object.keys(tokens).length > 0) {
+                riskLevel = 'HIGH';
+            } else if (expiryInfo.found && expiryInfo.status === 'EXPIRING SOON') {
+                riskLevel = 'MEDIUM';
+            }
+
+            const riskColor = riskLevel === 'CRITICAL' ? '#f44336' : riskLevel === 'HIGH' ? '#ff9800' : riskLevel === 'MEDIUM' ? '#ffc107' : '#4caf50';
+            html += `<div class="result-item" style="border-left-color: ${riskColor}; background: rgba(0,0,0,0.02);">
+                <div class="result-title">🔐 Security Risk: <span style="color: ${riskColor}; font-weight: 700;">${riskLevel}</span></div>
+            </div>`;
+
+            container.innerHTML = html;
+        }
+
+        // ==================== TOKEN ANALYZER ====================
+        async function analyzeToken() {
+            let tokenInput = document.getElementById('tokenInput').value.trim();
+            
+            if (!tokenInput) {
+                alert('Please enter a token or JWT');
+                return;
+            }
+
+            // Extract JWT from URL if needed
+            try {
+                const urlData = parseUrl(tokenInput);
+                for (let [key, value] of Object.entries(urlData.params)) {
+                    if (/^eyJ[A-Za-z0-9_-]/.test(value)) {
+                        tokenInput = value;
+                        break;
+                    }
+                }
+            } catch (e) {
+                // Not a URL, treat as direct token
+            }
+
+            document.getElementById('tokenLoading').style.display = 'block';
+            const resultsDiv = document.getElementById('tokenAnalyzerResults');
+            resultsDiv.innerHTML = '';
+
+            try {
+                log('Analyzing token...', { token: tokenInput.substring(0, 50) });
+
+                if (tokenInput.startsWith('eyJ')) {
+                    // JWT Token
+                    const decoded = decodeJWT(tokenInput);
+                    log('✅ JWT decoded successfully', decoded);
+                    displayTokenAnalysis(decoded, tokenInput, resultsDiv);
+                } else {
+                    // Generic token analysis
+                    log('Analyzing generic token...');
+                    displayGenericTokenAnalysis(tokenInput, resultsDiv);
+                }
+            } catch (error) {
+                log('❌ Token Analysis Error', error.message);
+                resultsDiv.innerHTML = `<div class="result-item error">
+                    <div class="result-title">❌ Error</div>
+                    <div class="result-content">${error.message}</div>
+                </div>`;
+            } finally {
+                document.getElementById('tokenLoading').style.display = 'none';
+            }
+        }
+
+        function displayTokenAnalysis(decoded, fullToken, container) {
+            let html = `<div class="token-analyzer">`;
+
+            // Header
+            html += `<div class="token-part header">
+                <strong>Header:</strong><br>
+                ${JSON.stringify(decoded.header, null, 2)}
+            </div>`;
+
+            // Payload Analysis
+            html += `<div class="token-part payload">
+                <strong>Payload:</strong><br>
+                ${JSON.stringify(decoded.payload, null, 2)}
+            </div>`;
+
+            // Signature
+            html += `<div class="token-part signature">
+                <strong>Signature (truncated):</strong><br>
+                ${decoded.signature.substring(0, 50)}...
+            </div>`;
+
+            html += `</div>`;
+
+            // Expiry Detection
+            if (decoded.payload.exp) {
+                const expiryDate = new Date(decoded.payload.exp * 1000);
+                const now = new Date();
+                const diff = expiryDate - now;
+                const daysRemaining = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+                const status = diff < 0 ? 'EXPIRED' : daysRemaining <= 1 ? 'EXPIRING SOON' : daysRemaining <= 7 ? 'EXPIRING' : 'ACTIVE';
+                const percentage = diff < 0 ? 0 : daysRemaining <= 1 ? 25 : daysRemaining <= 7 ? 50 : 100;
+
+                html += `<div class="result-item ${status === 'ACTIVE' ? 'success' : status === 'EXPIRED' ? 'error' : 'warning'}">
+                    <div class="result-title">⏰ Token Expiry
+                        <span class="status-badge ${status === 'ACTIVE' ? 'status-active' : status === 'EXPIRED' ? 'status-expired' : 'status-expiring'}">
+                            ${status}
+                        </span>
+                    </div>
+                    <div class="result-content">
+                        <strong>Issued At:</strong> ${decoded.payload.iat ? new Date(decoded.payload.iat * 1000).toLocaleString() : 'N/A'}<br>
+                        <strong>Expires At:</strong> ${expiryDate.toLocaleString()}<br>
+                        <strong>Days Remaining:</strong> ${daysRemaining}<br>
+                        <strong>Expiry Timestamp:</strong> ${decoded.payload.exp}<br>
+                        <div class="progress-bar" style="margin-top: 10px;">
+                            <div class="progress-fill" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            // Claims Analysis
+            html += `<div class="result-item success">
+                <div class="result-title">📋 Token Claims</div>
+                <div class="result-content">`;
+            for (let [key, value] of Object.entries(decoded.payload)) {
+                if (key !== 'exp' && key !== 'iat') {
+                    html += `<strong>${key}:</strong> ${typeof value === 'object' ? JSON.stringify(value) : value}<br>`;
+                }
+            }
+            html += `</div></div>`;
+
+            container.innerHTML = html;
+        }
+
+        function displayGenericTokenAnalysis(token, container) {
+            let html = `<div class="result-item success">
+                <div class="result-title">🔐 Token Analysis</div>
+                <div class="result-content">
+                    <strong>Token Length:</strong> ${token.length} characters<br>
+                    <strong>Token Type:</strong> Generic/Custom Token<br>
+                    <strong>Preview:</strong> ${token.substring(0, 50)}${token.length > 50 ? '...' : ''}
+                </div>
+            </div>`;
+
+            // Try to detect common patterns
+            if (/^[a-f0-9]{32}$/i.test(token)) {
+                html += `<div class="result-item warning">
+                    <div class="result-title">⚠️ Possible MD5 Hash</div>
+                </div>`;
+            } else if (/^[a-f0-9]{40}$/i.test(token)) {
+                html += `<div class="result-item warning">
+                    <div class="result-title">⚠️ Possible SHA1 Hash</div>
+                </div>`;
+            } else if (/^[a-f0-9]{64}$/i.test(token)) {
+                html += `<div class="result-item warning">
+                    <div class="result-title">⚠️ Possible SHA256 Hash</div>
+                </div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // ==================== BATCH TESTING ====================
+        async function batchTestLinks() {
+            const urlsText = document.getElementById('batchUrls').value.trim();
+            
+            if (!urlsText) {
+                alert('Please enter URLs');
+                return;
+            }
+
+            const urls = urlsText.split('\n').map(u => u.trim()).filter(u => u.length > 0);
+            
+            if (urls.length === 0) {
+                alert('No valid URLs found');
+                return;
+            }
+
+            document.getElementById('batchLoading').style.display = 'block';
+            const resultsDiv = document.getElementById('batchResults');
+            resultsDiv.innerHTML = '';
+
+            log('Starting batch test...', { urlCount: urls.length });
+
+            const results = [];
+            
+            for (let i = 0; i < urls.length; i++) {
+                try {
+                    const urlData = parseUrl(urls[i]);
+                    const expiryInfo = detectExpiry(urlData.params);
+                    const tokens = detectTokenPatterns(urlData.params);
+                    
+                    results.push({
+                        index: i + 1,
+                        url: urls[i],
+                        hostname: urlData.hostname,
+                        hasExpiry: expiryInfo.found,
+                        expiryStatus: expiryInfo.status,
+                        tokensCount: Object.keys(tokens).length,
+                        status: 'VALID'
+                    });
+                    log(`✅ Batch test ${i + 1}/${urls.length} completed`);
+                } catch (error) {
+                    log(`❌ Batch test ${i + 1}/${urls.length} failed`, error.message);
+                    results.push({
+                        index: i + 1,
+                        url: urls[i],
+                        status: 'INVALID',
+                        error: error.message
+                    });
+                }
+            }
+
+            displayBatchResults(results, resultsDiv);
+            document.getElementById('batchLoading').style.display = 'none';
+        }
+
+        function displayBatchResults(results, container) {
+            let html = `<div class="test-suite">`;
+            
+            let validCount = 0;
+            let invalidCount = 0;
+            let expiryCount = 0;
+
+            results.forEach(result => {
+                if (result.status === 'VALID') validCount++;
+                else invalidCount++;
+                if (result.hasExpiry) expiryCount++;
+
+                const passClass = result.status === 'VALID' ? 'passed' : 'failed';
+                const statusIcon = result.status === 'VALID' ? '✓' : '✗';
+
+                html += `<div class="test-case ${passClass}">
+                    <div>
+                        <div class="test-name">#${result.index} - ${result.hostname || 'Invalid URL'}</div>
+                        <div class="test-result">
+                            Status: ${statusIcon} ${result.status}
+                            ${result.hasExpiry ? ` | Expiry: ${result.expiryStatus}` : ''}
+                            ${result.tokensCount > 0 ? ` | Tokens: ${result.tokensCount}` : ''}
+                            ${result.error ? ` | Error: ${result.error}` : ''}
+                        </div>
+                    </div>
+                </div>`;
+            });
+
+            html += `</div>`;
+            
+            html += `<div class="result-item success" style="margin-top: 20px;">
+                <div class="result-title">📊 Batch Summary</div>
+                <div class="result-content">
+                    <strong>Total URLs:</strong> ${results.length}<br>
+                    <strong>Valid URLs:</strong> ${validCount}<br>
+                    <strong>Invalid URLs:</strong> ${invalidCount}<br>
+                    <strong>URLs with Expiry:</strong> ${expiryCount}<br>
+                    <strong>Success Rate:</strong> ${Math.round((validCount / results.length) * 100)}%
+                </div>
+            </div>`;
+
+            container.innerHTML = html;
+        }
+
+        // ==================== CLEAR FUNCTIONS ====================
+        function clearUrlValidator() {
+            document.getElementById('streamingUrl').value = '';
+            document.getElementById('urlValidatorResults').innerHTML = '';
+        }
+
+        function clearTokenAnalyzer() {
+            document.getElementById('tokenInput').value = '';
+            document.getElementById('tokenAnalyzerResults').innerHTML = '';
+        }
+
+        function clearBatchTest() {
+            document.getElementById('batchUrls').value = '';
+            document.getElementById('batchResults').innerHTML = '';
+        }
+
+        // Initial log
+        window.addEventListener('DOMContentLoaded', () => {
+            log('🎬 Streaming Link Validator loaded successfully');
+        });
+    </script>
+</body>
+</html>
