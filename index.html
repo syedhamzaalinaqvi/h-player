@@ -659,6 +659,32 @@
             font-size: 0.85rem;
             color: var(--warning);
             margin-bottom: 8px;
+            cursor: pointer;
+            padding: 8px 10px;
+            border-radius: 4px;
+            background: rgba(255, 152, 0, 0.1);
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .season-label:hover {
+            background: rgba(255, 152, 0, 0.15);
+        }
+
+        .season-episodes {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 500px;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            opacity: 1;
+        }
+
+        .season-episodes.collapsed {
+            max-height: 0;
+            opacity: 0;
+            pointer-events: none;
         }
 
         .episode-mini {
@@ -820,7 +846,7 @@
                 </div>
             </div>
 
-            <div class="video-container">
+            <div class="video-container" id="videoContainer" onclick="handleVideoContainerClick(event)">
                 <video id="videoPlayer" class="video-element"></video>
             </div>
 
@@ -864,6 +890,10 @@
 
                         <button class="control-btn toggle-sidebar" onclick="toggleSidebar()">
                             <i class="fas fa-list"></i>
+                        </button>
+
+                        <button class="control-btn" id="fullscreenBtn" onclick="toggleFullscreen()" title="Fullscreen">
+                            <i class="fas fa-expand"></i>
                         </button>
                     </div>
                 </div>
@@ -1767,9 +1797,11 @@
 
                 if (isCurrentSeries) {
                     series.seasons.forEach((season, seasonIdx) => {
-                        if (seasonIdx > 0) {
-                            html += `<div class="season-separator">Season ${season.seasonNumber}</div>`;
-                        }
+                        html += `
+                            <div class="season-block">
+                                <div class="season-label" onclick="togglePlaylistSeasonEpisodes(this, event)">Season ${season.seasonNumber}</div>
+                                <div class="season-episodes">
+                        `;
 
                         season.episodes.forEach((ep, epIdx) => {
                             const isActive = currentSeasonIdx === seasonIdx && currentEpisodeIdx === epIdx;
@@ -1790,6 +1822,11 @@
                                 </div>
                             `;
                         });
+
+                        html += `
+                                </div>
+                            </div>
+                        `;
                     });
                 }
 
@@ -1856,7 +1893,8 @@
                 series.seasons.forEach((season, seasonIdx) => {
                     html += `
                         <div class="season-block">
-                            <div class="season-label">Season ${season.seasonNumber}</div>
+                            <div class="season-label" onclick="toggleSeasonEpisodes(this, event)">Season ${season.seasonNumber}</div>
+                            <div class="season-episodes">
                     `;
 
                     season.episodes.forEach((ep, epIdx) => {
@@ -1876,7 +1914,10 @@
                         `;
                     });
 
-                    html += '</div>';
+                    html += `
+                            </div>
+                        </div>
+                    `;
                 });
 
                 html += `
@@ -1899,6 +1940,30 @@
         function toggleSeriesExpand(element) {
             element.classList.toggle('expanded');
             element.nextElementSibling.classList.toggle('expanded');
+        }
+
+        function toggleSeriesPlaylistExpand(seriesIdx, event) {
+            // For playlist sidebar - toggle series display
+            if (event) event.stopPropagation();
+            renderPlaylist();
+        }
+
+        function toggleSeasonEpisodes(element, event) {
+            if (event) event.stopPropagation();
+            const episodesDiv = element.nextElementSibling;
+            episodesDiv.classList.toggle('collapsed');
+        }
+
+        function togglePlaylistSeasonEpisodes(element, event) {
+            if (event) event.stopPropagation();
+            const episodesDiv = element.nextElementSibling;
+            episodesDiv.classList.toggle('collapsed');
+        }
+
+        function handleVideoContainerClick(event) {
+            // Don't trigger on control buttons or progress bar clicks
+            if (event.target.closest('.player-controls')) return;
+            togglePlay();
         }
 
         // ==================== PLAYER CONTROLS ====================
@@ -2039,14 +2104,30 @@
         function toggleFullscreen() {
             const section = document.getElementById('playerSection');
             const container = document.getElementById('appContainer');
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
             
             section.classList.toggle('fullscreen');
             container.classList.toggle('fullscreen');
-
-            if (document.fullscreenElement) {
-                document.exitFullscreen();
+            
+            // Make sidebar accessible in fullscreen
+            const sidebar = document.getElementById('sidebar');
+            if (section.classList.contains('fullscreen')) {
+                // Entering fullscreen
+                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+                fullscreenBtn.title = 'Exit Fullscreen';
+                // Ensure sidebar has proper z-index for fullscreen
+                sidebar.style.zIndex = '10000';
+                section.requestFullscreen().catch(() => {
+                    console.log('Fullscreen request failed');
+                });
             } else {
-                section.requestFullscreen().catch(() => {});
+                // Exiting fullscreen
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                fullscreenBtn.title = 'Fullscreen';
+                sidebar.style.zIndex = '9999';
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                }
             }
         }
 
